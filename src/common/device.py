@@ -125,7 +125,7 @@ class Device(object):
             self.messageCallback = SnabbCallback(self)
             nc = NotificationClient(device=self._host, port=self._mqtt_port)
             self.evHandle = nc.get_notification_service()
-            cutopic = self.evHandle.CreateConfigUpdateTopic()
+            cutopic = self.evHandle.create_config_update_topic()
             self.evHandle.Subscribe(cutopic, self.messageCallback)
             # subscription completed
             LOG.info("Notification channel opened now")

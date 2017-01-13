@@ -1,7 +1,9 @@
 import collections
 import paho
+import struct
 from notification_handler import *
 from common.app_globals import *
+from common.mylogging import LOG
 
 class NotificationClient:
 
@@ -24,7 +26,7 @@ class NotificationClient:
 
         try:
             self.notifier = NotifierMqtt()
-            logger.info('Connecting to JET notification server')
+            LOG.info('Connecting to JET notification server')
             self.notifier.mqtt_client.connect(device, port, keepalive, bind_address)
             self.notifier.mqtt_client.loop_start()
             self.notifier.handlers = collections.defaultdict(set)
@@ -37,11 +39,11 @@ class NotificationClient:
             message = err.message
             err.message = 'Invalid argument value passed in %s at line no. %s\nError: %s' \
                           % (traceback.extract_stack()[0][0], traceback.extract_stack()[0][1], message)
-            logger.error('%s' % (err.message))
+            LOG.error('%s' % (err.message))
             raise err
         except Exception, tx:
             tx.message = 'Could not connect to the JET notification server'
-            logger.error('%s' % (tx.message))
+            LOG.error('%s' % (tx.message))
             raise Exception(tx.message)
         pass
 
@@ -52,7 +54,7 @@ class NotificationClient:
         """
 
         self.notifier.Close()
-        logger.info('JET notification channel closed by user.')
+        LOG.info('JET notification channel closed by user.')
         pass
 
     def get_notification_service(self):

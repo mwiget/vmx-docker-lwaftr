@@ -23,11 +23,10 @@
 import paho.mqtt.client as mqtt
 import json
 import collections
-import logging
+from common.mylogging import LOG
 from notification_topic import CreateTopic
 
 decoder = json.JSONDecoder()
-logger = logging.getLogger(__name__)
 
 
 class NotifierMqtt(CreateTopic):
@@ -75,7 +74,7 @@ class NotifierMqtt(CreateTopic):
                         callback_called = True
         if callback_called == False:
             for cb in self.handlers.get('#', []):
-                logger.debug('Sending data to callback %s' % cb)
+                LOG.info('Sending data to callback %s' % cb)
                 cb(payload)
 
     def on_message_cb(self, client, obj, msg):
@@ -93,11 +92,11 @@ class NotifierMqtt(CreateTopic):
         json_data = None
         json_data, end = decoder.raw_decode(payload)
         if json_data is None:
-            logger.error('Received event has invalid JSON format')
-            logger.error('Received payload: %s' % payload)
+            LOG.info('Received event has invalid JSON format')
+            LOG.info('Received payload: %s' % payload)
         if len(payload) != end:
-            logger.error('Received event has additional invalid JSON format')
-            logger.error('It has the following additional content: %s' % payload[end:])
+            LOG.info('Received event has additional invalid JSON format')
+            LOG.info('It has the following additional content: %s' % payload[end:])
         callback_called = False
         for cbs in self.handlers:
             if cbs != '#':
@@ -108,7 +107,7 @@ class NotifierMqtt(CreateTopic):
 
         if callback_called == False:
             for cb in self.handlers.get('#', []):
-                logger.debug('Sending data to callback %s' % cb)
+                LOG.info('Sending data to callback %s' % cb)
                 cb(json_data)
 
     def Subscribe(self, subscriptionType, handler=None, qos=0):
@@ -129,7 +128,7 @@ class NotifierMqtt(CreateTopic):
         
         if(handler):
             self.handlers[topic].add(handler)
-        logger.info('Successfully subscribed to event:%s' %subscriptionType.topic)
+        LOG.info('Successfully subscribed to event:%s' %subscriptionType.topic)
 
     def Unsubscribe(self, subscriptionType=None):
         """
@@ -144,11 +143,11 @@ class NotifierMqtt(CreateTopic):
         if subscriptionType is None:
             self.mqtt_client.unsubscribe(self.topics_subscribed)
             self.handlers = collections.defaultdict(set)
-            logger.info('Successfully unsubscribed from all notifications')
+            LOG.info('Successfully unsubscribed from all notifications')
             return 0
         elif not isinstance(subscriptionType, type):
             message = 'Invalid subscription topic: ' + subscriptionType
-            logger.error(message)
+            LOG.info(message)
             raise Exception(message)
     
         else:
@@ -157,11 +156,11 @@ class NotifierMqtt(CreateTopic):
                     self.mqtt_client.unsubscribe(subscriptionType.topic)
                     self.mqtt_client.unsubscribe(subscriptionType.topic)
                     self.handlers.pop(str(subscriptionType.topic), None)
-                    logger.info('Successfully unsubscribed %s' % subscriptionType.topic)
+                    LOG.info('Successfully unsubscribed %s' % subscriptionType.topic)
                     return 0
     
             # Failed case
-            logger.info('You have not subscribed to %s. Failed to unsubscribe' % subscriptionType.topic)
+            LOG.error('You have not subscribed to %s. Failed to unsubscribe' % subscriptionType.topic)
             return -1
 
     def SetCallbackOnConnect(self, cb):
