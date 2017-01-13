@@ -2,11 +2,16 @@ __author__ = "Amish Anand"
 __copyright__ = "Copyright (c) 2017 Juniper Networks, Inc."
 
 import sys
-from jnpr.jet.JetHandler import *
+#from jnpr.jet.JetHandler import *
 from sanity import Sanity
 from conf.callback import SnabbCallback
 from mylogging import LOG
-import time
+from grpc.beta import implementations
+import op.protos.authentication_service_pb2 as authentication_service_pb2
+import random, string
+from app_globals import *
+from notification.notification import NotificationClient
+
 
 class Device(object):
 
@@ -63,35 +68,32 @@ class Device(object):
         return self._mqtt_port
 
 
-    def __init__(self, host, user, pwd, port = 1883, **kvargs):
-        """
-        Device object constructor
-        :param str host: Hostname of the VMX
-        :param int port: Notification port, default = 1883
-        :param str user: Username
-        :param str pwd: Password
-        """
+    def establish_connection(self):
+        LOG.info("Connected to JSD:ip=%s, port=%s, client-id = %s" %(self._host, self._rpc_port, self._client_id))
+        channel = implementations.insecure_channel(self._host, self._rpc_port)
+        stub = authentication_service_pb2.beta_create_Login_stub(channel)
+        request = authentication_service_pb2.LoginRequest(user_name=self._auth_user, password= self._auth_pwd,
+                                                          client_id=self._client_id)
+        login_response = stub.LoginCheck(request, RPC_TIMEOUT_SECONDS)
+        LOG.info("Received response from the LoginCheck: %s" %login_response.result)
+        return channel
 
+    def __init__(self, host= DEFAULT_RPC_HOST, user=DEFAULT_USER_NAME, pwd=DEFAULT_PASSWORD,
+                 rpc_port=DEFAULT_RPC_PORT, notification_port = DEFAULT_NOTIFICATION_PORT, **kvargs):
         self._host = host
-        self._mqtt_port = port
+        self._mqtt_port = notification_port
         self._auth_user = user
         self._auth_pwd = pwd
-        self.jetClient = JetHandler()
+        self._rpc_port = rpc_port
+        # Creating a random client id everytime to avoid disconnect from JSD
+        self._client_id =  ''.join(random.choice(string.lowercase) for i in range(10))
+        self._rpc_channel = self.establish_connection()
         # Initialize the instance variables
         self.connected = False
         self.opServer = None
         self.evHandle = None
 
     def initialize(self, *vargs, **kvargs):
-        """
-        Open the Request Response Connection
-        open the notification connection
-        start the worker threads
-        start the twisted server
-        :param vargs:
-        :param kvargs:
-        :return:
-        """
         # Create a request response session
         try:
             sanityObj = Sanity(self)
@@ -121,8 +123,8 @@ class Device(object):
 
             # Open notification session
             self.messageCallback = SnabbCallback(self)
-            self.evHandle = self.jetClient.OpenNotificationSession(
-                device=self._host, port=self._mqtt_port)
+            nc = NotificationClient(device=self._host, port=self._mqtt_port)
+            self.evHandle = nc.get_notification_service()
             cutopic = self.evHandle.CreateConfigUpdateTopic()
             self.evHandle.Subscribe(cutopic, self.messageCallback)
             # subscription completed
