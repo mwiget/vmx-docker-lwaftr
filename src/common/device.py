@@ -2,6 +2,7 @@ __author__ = "Amish Anand"
 __copyright__ = "Copyright (c) 2017 Juniper Networks, Inc."
 
 import sys
+import os
 #from jnpr.jet.JetHandler import *
 from sanity import Sanity
 from conf.callback import SnabbCallback
@@ -92,20 +93,21 @@ class Device(object):
         self.connected = False
         self.opServer = None
         self.evHandle = None
+        self.messageCallback = SnabbCallback(self)
 
     def initialize(self, *vargs, **kvargs):
         # Create a request response session
         try:
             sanityObj = Sanity(self)
             sanityResult = sanityObj.YangModulePresent()
-            if (False == sanityResult):
+            if False == sanityResult:
                 # log the message
                 LOG.critical("Yang module not present")
-                os._exit(0)
+                sys.exit(0)
             LOG.info("YANG module present")
 
             sanityResult = sanityObj.NotificationConfigPresent()
-            if (False == sanityResult):
+            if (True == sanityResult):
                 # Apply the commit notification config of the vmx
                 print("Commit notification config is not present")
                 result = sanityObj.CommitNotificationConfig()
@@ -113,7 +115,7 @@ class Device(object):
                     # Failed to apply the notification config on the vmx
                     LOG.critical("Failed to apply commit notification config on the VMX")
                     # log the message
-                    os._exit(0)
+                    sys.exit(0)
                 else:
                     LOG.info("Applied the commit notification config successfully")
             else:
@@ -122,7 +124,7 @@ class Device(object):
                 pass
 
             # Open notification session
-            self.messageCallback = SnabbCallback(self)
+
             nc = NotificationClient(device=self._host, port=self._mqtt_port)
             self.evHandle = nc.get_notification_service()
             cutopic = self.evHandle.create_config_update_topic()
@@ -133,7 +135,13 @@ class Device(object):
             LOG.info('Device is initialized now')
         except Exception as e:
             print("Exception received: %s" %e.message)
-            os._exit(0)
+            sys.exit(0)
+
+    def getChannel(self):
+        if self._rpc_channel:
+            return self._rpc_channel
+        else:
+            return self.establish_connection()
 
     def close(self):
         self.evHandle.Unsubscribe()
