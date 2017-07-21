@@ -83,9 +83,14 @@ interfaces {
         }
       }
     }
- }
- snmp {
+}
+snmp {
     community public;
+}
+protocols {
+    lldp {
+       interface all;
+    }
 }
 routing-instances {
     R1 {
