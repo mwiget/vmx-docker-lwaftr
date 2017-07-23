@@ -1,5 +1,6 @@
+# Juniper Networks vMX Docker lwAftr Container
 
-# Juniper Networks vMX lwaftr Docker Container
+[![Build Status](https://travis-ci.org/mwiget/vmx-docker-lwaftr.svg?branch=criot)](https://travis-ci.org/mwiget/vmx-docker-lwaftr)
 
 The vmx-docker-lwaftr Docker Container contains everything thats required to successfully launch vMX 16.1R3 and newer images with a configuration file and license key. This document describes how that Container can be built from source. The actual vMX images is NOT part of the Container. It will be loaded from the official vMX tar file placed in the local directory from where the Container is launched.
 
