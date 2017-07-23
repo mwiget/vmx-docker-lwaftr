@@ -5,8 +5,20 @@ python:
 services:
   - docker
 
+env:
+  global:
+    - COMMIT=${TRAVIS_COMMIT::8}
+    - REPO=marcelwiget/vmx-docker-lwaftr
+
 install:
-  - docker build -t vmx-docker-lwaftr src
+  - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
+  - docker build -t vmx-docker-lwaftr -t $REPO:$TAG src
 
 script:
   - docker images | grep vmx-docker-lwaftr
+
+after_success:
+  - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASSWORD
+  - docker tag $REPO:$COMMIT $REPO:$TAG
+  - docker tag $REPO:$COMMIT $REPO:$TRAVIS_BUILD_NUMBER
+  - docker push $REPO
