@@ -1,10 +1,7 @@
-#!/usr/bin/env python
-__author__ = "Amish Anand"
-__copyright__ = "Copyright (c) 2015 Juniper Networks, Inc."
 
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER
 #
-# Copyright (c) 2016 Juniper Networks, Inc.
+# Copyright (c) 2015 Juniper Networks, Inc.
 # All rights reserved.
 #
 # Use is subject to license terms.
@@ -20,16 +17,46 @@ __copyright__ = "Copyright (c) 2015 Juniper Networks, Inc."
 # limitations under the License.
 # Please make sure to run this file as a root user
 
+#!/usr/bin/env python
+__author__ = "Amish Anand"
+__copyright__ = "Copyright (c) 2017 Juniper Networks, Inc."
 
+import argparse
+import sys
 import os
+from common.device import Device
+from threading import Thread
+from conf.conf_parser import ParseNotification
 from op.opserver import OpServer
 from twisted.internet import reactor
 from twisted.web import server
-from utils.jetapplog import LOG
+from common.mylogging import LOG
+from common.app_globals import *
 
 
 def Main():
+    parser = argparse.ArgumentParser(prog=os.path.basename(__file__), description='Snabb VMX integration JET app')
+    parser.add_argument("--host", required=True, help="Host address of the JSD server",
+                        type=str, default=DEFAULT_RPC_HOST)
+    parser.add_argument("--user", required=True, help="Username for authentication by JET server (default:%(default)s)",
+                        type=str, default=DEFAULT_USER_NAME)
+    parser.add_argument("--password", required=True, help="Password for authentication by JET server (default:%(default)s",
+                        type=str, default=DEFAULT_PASSWORD)
+    parser.add_argument("--rpc_port", nargs='?', help="Port number of the JSD gRPC server. default: %(default)s",
+                        type=int, default=DEFAULT_RPC_PORT)
+    parser.add_argument("--notification_port", nargs='?', help="Port number of the JSD notification server. default: %(default)s",
+                        type=int, default=DEFAULT_NOTIFICATION_PORT)
+    args = parser.parse_args()
+    device = Device(args.host,args.user,args.password,args.rpc_port,args.notification_port)
+
+    dispatchFunction = ParseNotification(device)
+    dispatchThread = Thread(target=dispatchFunction)
+    dispatchThread.setDaemon(True)
+    dispatchThread.start()
     try:
+        device.initialize()
+        # log device initialized successfully
+        print "Device initialized for the configuration updates"
         opw = OpServer()
         reactor.listenTCP(9191, server.Site(opw))
         LOG.info("Starting the reactor")
@@ -38,7 +65,7 @@ def Main():
     except Exception as e:
         # log device initialization failed
         LOG.critical("JET app exiting due to exception: %s" %str(e.message))
-        os._exit(0)
+        sys.exit(0)
     return
 
 if __name__ == '__main__':

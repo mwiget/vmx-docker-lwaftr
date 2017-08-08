@@ -21,7 +21,6 @@ class OpServer(xmlrpc.XMLRPC):
             return None
         return output
 
-
 def Main():
     try:
         # log device initialized successfully
@@ -33,12 +32,9 @@ def Main():
 
     except Exception as e:
         # log device initialization failed
-        print("JET app exiting due to exception: %s" %str(e.message))
-#        LOG.critical("JET app exiting due to exception: %s" %str(e.message))
+        LOG.critical("JET app exiting due to exception: %s" %str(e.message))
         os._exit(0)
     return
-
-
 
 if __name__ == '__main__':
     Main()
