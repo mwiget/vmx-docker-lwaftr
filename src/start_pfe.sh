@@ -29,6 +29,10 @@ patch -p0 < /riot.patch
 tar zcf riot_lnx.tgz riot
 rsh 128.0.0.1 mv /usr/share/pfe/riot_lnx.tgz /usr/share/pfe/riot_lnx.tgz.orig
 rcp riot_lnx.tgz 128.0.0.1:/usr/share/pfe/
+# fix checksum
+rsh 128.0.0.1 mv /usr/share/pfe/riot_lnx.sha1 /usr/share/pfe/riot_lnx.sha1.orig
+rsh 128.0.0.1 "sha1 /usr/share/pfe/riot_lnx.tgz > /usr/share/pfe/riot_lnx.sha1"
+
 cd /
 echo "done"
 
