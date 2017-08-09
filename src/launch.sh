@@ -88,6 +88,10 @@ if [[ "$IMAGE" =~ \.qcow2$ ]]; then
   echo "using qcow2 image $IMAGE"
   cp /u/$IMAGE /tmp/
   VCPIMAGE=$IMAGE
+elif [[ "$IMAGE" =~ \.vmdk$ ]]; then
+  echo "using vmdk image $IMAGE"
+  cp /u/$IMAGE /tmp/
+  VCPIMAGE=$IMAGE
 else
   echo "extracting qcow2 image from $IMAGE ..."
   tar zxvf /u/$IMAGE -C /tmp/ --wildcards vmx/images/junos*qcow2 2>/dev/null

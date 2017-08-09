@@ -90,7 +90,7 @@ COPY launch.sh launch_snabb.sh top.sh topl.sh \
   launch_jetapp.sh launch_opserver.sh create_config_drive.sh \
   launch_snabbvmx_manager.sh snabbvmx_manager.pl show_affinity.sh \
   add_bindings.sh \
-  riot.patch start_pfe.sh fix_network_order.sh /
+  riot.patch riot.patch.17.4 start_pfe.sh fix_network_order.sh /
 
 RUN chmod a+rx /*.sh
 
