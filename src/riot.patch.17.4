@@ -1,0 +1,18 @@
+--- riot/nested_env.sh.orig	2017-08-04 08:20:00.000000000 +0200
++++ riot/nested_env.sh	2017-08-08 22:33:41.247372790 +0200
+@@ -99,15 +99,6 @@
+     for vif in ${vif_list}
+     do
+         devtype=$(ethtool -i ${vif} | grep driver | cut -d' ' -f2)
+-        # Further filter the list by skipping devices that are not
+-        # controlled by 'vif' or 'veth' driver
+-        if [[ "${devtype}" != "vif" && "${devtype}" != "veth" && "${devtype}" != "hv_netvsc" && "${force_pcap}" != "1" ]]; then
+-            continue
+-        fi
+-        if [ ${skipped_intf} -lt ${num_skip_intf} ]; then
+-            skipped_intf=$(($skipped_intf + 1))
+-            continue
+-        fi
+         # make sure the device is marked as 'UP', mtu set to 9001
+         ip link set dev ${vif} up mtu 9001
+         # turn off ipv6 for this interface on linux
