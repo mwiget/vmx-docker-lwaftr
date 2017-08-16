@@ -27,6 +27,7 @@ rcp 128.0.0.1:/usr/share/pfe/riot_lnx.tgz .
 tar zxf riot_lnx.tgz
 patch -Np0 < /riot.patch
 patch -Np0 < /riot.patch.17.4
+patch -Np0 < /riot_start.patch
 tar zcf riot_lnx.tgz riot
 rsh 128.0.0.1 mv /usr/share/pfe/riot_lnx.tgz /usr/share/pfe/riot_lnx.tgz.orig
 rcp riot_lnx.tgz 128.0.0.1:/usr/share/pfe/

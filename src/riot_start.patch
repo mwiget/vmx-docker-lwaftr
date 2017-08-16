@@ -1,0 +1,20 @@
+--- riot/start_riot.sh.orig	2017-08-09 09:41:14.184446136 +0000
++++ riot/start_riot.sh	2017-08-09 09:47:18.180458851 +0000
+@@ -155,7 +155,7 @@
+     fi
+ else
+     # How many cores do we have?
+-    numcpus=`lscpu | grep "^CPU(s):" | awk '{ print $NF }'`
++    numcpus=`nproc`
+     case $numcpus in
+     2 ) 
+       # Fake the args for 3 cpus, but pin io and worker to core 1
+@@ -196,7 +196,7 @@
+ 
+ # Get the taskset mask
+ 
+-taskset_mask=`lscpu -x | grep "On-line CPU(s) mask:" | awk '{ print $NF }'`
++taskset_mask="0x`cat /proc/self/status |grep Cpus_allowed:|awk {'print $2'}|tr -d ,`"
+ 
+ # Reference command string.
+ #python riot.py -c fff0 -n 2 -- --rx "(0,0,0,8),(1,0,2,9)" --tx "(0,8),(1,9)" --w "10,11,12,13" --rpio "inet,3000,3001" --hostif "inet,3002" --bsz "(32,32),(32,32),(64,64)" 

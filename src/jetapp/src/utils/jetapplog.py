@@ -5,7 +5,7 @@ import logging
 
 # Logging Parameters
 DEFAULT_LOG_FILE_NAME = '/tmp/jetapp.log'
-DEFAULT_LOG_LEVEL = logging.INFO
+DEFAULT_LOG_LEVEL = logging.DEBUG
 
 # Enable Logging to a file
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)s ] %(message)s"

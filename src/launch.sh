@@ -463,6 +463,7 @@ BINDINGS=$(grep binding-table-file /tmp/$CONFIG | awk '{print $2}'|cut -d';' -f1
 if [ -f /u/$BINDINGS ]; then
   cp /u/$BINDINGS /tmp/
   BINDINGS=$(basename $BINDINGS)
+  cd /tmp && /add_bindings.sh $BINDINGS &
 else
   echo "WARNING: Binding table file $BINDINGS not found"
 fi
@@ -485,11 +486,8 @@ done
 export PFE_SRC
 sh /start_pfe.sh &
 
-echo "launching JET opserver ..."
-cd /tmp && /launch_opserver.sh &
-
-echo "launching snabbvmx_manager.pl ..."
-cd /tmp && /launch_snabbvmx_manager.sh 128.0.0.1 $IDENTITY $BINDINGS &
+echo "launching JET server ..."
+cd /tmp && /launch_jet.sh &
 
 cd /tmp
 

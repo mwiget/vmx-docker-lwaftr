@@ -14,6 +14,9 @@ system {
             }
         }
     }
+    commit {
+        notification;
+    }
     services {
         ssh;
         extension-service {
@@ -167,6 +170,7 @@ ietf-softwire:softwire-config {
                     tunnel-payload-mtu 9000;
                     tunnel-path-mru 9000;
                     jnx-aug-softwire:ipv4_address 172.20.1.16;
+                    jnx-aug-softwire:ipv6_address fd00:4601::16;
                     jnx-aug-softwire:cache_refresh_interval 1;
 		    jnx-aug-softwire:icmpv6_rate_limiter_n_packets 5;
 		    jnx-aug-softwire:icmpv6_rate_limiter_n_seconds 1;
@@ -176,6 +180,7 @@ ietf-softwire:softwire-config {
                     tunnel-payload-mtu 9000;
                     tunnel-path-mru 9000;
                     jnx-aug-softwire:ipv4_address 172.20.2.16;
+                    jnx-aug-softwire:ipv6_address fd00:4602::16;
                     jnx-aug-softwire:cache_refresh_interval 0;
                     binding-table {
                         binding-entry fd00:4602::1001 {
@@ -230,6 +235,7 @@ ietf-softwire:softwire-config {
                     tunnel-payload-mtu 9000;
                     tunnel-path-mru 9000;
                     jnx-aug-softwire:ipv4_address 172.20.3.16;
+                    jnx-aug-softwire:ipv6_address fd00:4603::16;
                     jnx-aug-softwire:cache_refresh_interval 1;
 		    jnx-aug-softwire:icmpv6_rate_limiter_n_packets 5;
 		    jnx-aug-softwire:icmpv6_rate_limiter_n_seconds 1;
@@ -239,6 +245,7 @@ ietf-softwire:softwire-config {
                     tunnel-payload-mtu 9000;
                     tunnel-path-mru 9000;
                     jnx-aug-softwire:ipv4_address 172.20.4.16;
+                    jnx-aug-softwire:ipv6_address fd00:4604::16;
                     jnx-aug-softwire:cache_refresh_interval 1;
 		    jnx-aug-softwire:icmpv6_rate_limiter_n_packets 5;
 		    jnx-aug-softwire:icmpv6_rate_limiter_n_seconds 1;

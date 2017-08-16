@@ -398,10 +398,10 @@ rpc get-lwaftr-statistics {
        	     description " ";
            }
 
-       container statistics-format {
+       junos-odl:format statistics-format {
          junos-odl:cli-format;
        	 junos-odl:header "Snabb Statistics \n";
-       	junos-odl:picture "
+       	 junos-odl:picture "
 @\\n
 @\\n
 @\\n

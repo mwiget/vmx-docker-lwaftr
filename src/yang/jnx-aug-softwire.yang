@@ -33,6 +33,13 @@ module jnx-aug-softwire {
         This is a mandatory field
         ";
     }
+    leaf ipv6_address {
+      type inet:ipv6-address;
+      description 
+        "
+        IPv6 address
+        ";
+    }
     leaf ipv6_vlan {
       type uint16 {
         range 0..4094;

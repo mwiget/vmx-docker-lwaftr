@@ -11,7 +11,9 @@ services:
       - "830"
     environment:
       - LICENSE=license-eval.txt
-      - IMAGE=junos-vmx-x86-64-17.3B1.1.qcow2
+        #      - IMAGE=junos-vmx-x86-64-17.3B1.1.qcow2
+        #- IMAGE=junos-vmx-x86-64-17.3-20170727.0.qcow2
+      - IMAGE=junos-vmx-x86-64-17.4-20170810.0.qcow2
       - PUBLICKEY=id_rsa.pub
       - CONFIG=lwaftr.conf.txt
       - INTERFACES=03:00.0/10 04:00.0/12

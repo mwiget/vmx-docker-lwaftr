@@ -85,7 +85,7 @@ rpc get-lwaftr-state {
 	      type string;
 	      description "Breaths count";
 	   }
-           container instance-format {
+           junos-odl:format instance-format {
              junos-odl:cli-format;
        	     junos-odl:header "Snabb State \n";
 
@@ -139,6 +139,4 @@ rpc get-lwaftr-state {
        }
      }
 }
-
 }
-

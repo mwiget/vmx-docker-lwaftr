@@ -36,18 +36,19 @@ from common.app_globals import *
 
 def Main():
     parser = argparse.ArgumentParser(prog=os.path.basename(__file__), description='Snabb VMX integration JET app')
-    parser.add_argument("--host", required=True, help="Host address of the JSD server",
-                        type=str, default=DEFAULT_RPC_HOST)
-    parser.add_argument("--user", required=True, help="Username for authentication by JET server (default:%(default)s)",
+    parser.add_argument("--host", required=False, help="Host address of the JSD server",
+                        type=str, default=DEFAULT_NETCONF_HOST)
+    parser.add_argument("--user", required=False, help="Username for authentication by NETCONF server (default:%(default)s)",
                         type=str, default=DEFAULT_USER_NAME)
-    parser.add_argument("--password", required=True, help="Password for authentication by JET server (default:%(default)s",
+    parser.add_argument("--password", required=False, help="Password for authentication by NETCONF server (default:%(default)s)",
                         type=str, default=DEFAULT_PASSWORD)
-    parser.add_argument("--rpc_port", nargs='?', help="Port number of the JSD gRPC server. default: %(default)s",
-                        type=int, default=DEFAULT_RPC_PORT)
+    parser.add_argument("--netconf_port", nargs='?', help="Port number of the JSD NETCONF server. default: %(default)s",
+                        type=int, default=DEFAULT_NETCONF_PORT)
     parser.add_argument("--notification_port", nargs='?', help="Port number of the JSD notification server. default: %(default)s",
                         type=int, default=DEFAULT_NOTIFICATION_PORT)
     args = parser.parse_args()
-    device = Device(args.host,args.user,args.password,args.rpc_port,args.notification_port)
+    
+    device = Device(args.host,args.user,args.password,args.netconf_port,args.notification_port)
 
     dispatchFunction = ParseNotification(device)
     dispatchThread = Thread(target=dispatchFunction)
@@ -56,7 +57,6 @@ def Main():
     try:
         device.initialize()
         # log device initialized successfully
-        print "Device initialized for the configuration updates"
         opw = OpServer()
         reactor.listenTCP(9191, server.Site(opw))
         LOG.info("Starting the reactor")

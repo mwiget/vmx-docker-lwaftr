@@ -1,6 +1,7 @@
 all: build 
 
 build:	src/Dockerfile
+	docker build -t vmx-docker-lwaftr src
 	docker-compose build
 
 buildclean: src/Dockerfile
@@ -11,6 +12,7 @@ up: build
 
 ps:
 	docker-compose ps
+	./getpass.sh
 
 query:
 	@echo 

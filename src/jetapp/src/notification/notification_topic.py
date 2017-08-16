@@ -23,8 +23,8 @@ from common.mylogging import LOG
 DEFAULT_VALUE = "+"                           # Implies any value
 DEFAULT_TOPIC = "#"                           # Implies all value
 DEFAULT_IFD = r"+/+/+"                        # Regular expression for a default IFD
-GENPUB_TOPIC_HEADER = r"/junos/events/genpub" # Generic pub event topic header
-CONFIG_UPDATE = r"config-update"
+GENPUB_TOPIC_HEADER = r"/junos/events/genpub"
+CONFIG_UPDATE = r"config-update"              # requires set system commit notification
 
 class CreateTopic(object):
 

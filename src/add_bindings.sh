@@ -1,27 +1,18 @@
 #!/usr/bin/env bash
-# Copyright (c) 2016, Juniper Networks, Inc.
+# Copyright (c) 2017, Juniper Networks, Inc.
 # All rights reserved.
 
-MGMTIP=$1
-IDENTITY=$2
-BINDINGS=$3
+BINDINGS=$1
 
 if [ ! -f "$BINDINGS" ]; then
   echo "no binding file found at $BINDINGS"
-  echo "Usage: $0 mgmt-ip-adress identity binding-file"
+  echo "Usage: $0 binding-file"
   exit 1
-fi
-
-# With IPv6 addresses, use square brackets for scp
-if [[ $MGMTIP == *":"* ]]; then
-  MGMTIPSCP="[$MGMTIP]"
-else
-  MGMTIPSCP=$MGMTIP
 fi
 
 # vRE might not be up for a while, so keep trying to upload the license file ...
 while true; do
-  scp -o StrictHostKeyChecking=no -i $IDENTITY $BINDINGS snabbvmx@$MGMTIPSCP:/var/db/scripts/commit/
+  scp -o StrictHostKeyChecking=no $BINDINGS root@128.0.0.1:/var/db/scripts/commit/
   if [ $? == 0 ]; then
     echo "transfer successful"
     break;
