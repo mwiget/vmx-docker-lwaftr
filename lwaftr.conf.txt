@@ -29,6 +29,9 @@ system {
             }
         }
     }
+    commit {
+          notification;
+    }
 }
 interfaces {
     ge-0/0/0 {
