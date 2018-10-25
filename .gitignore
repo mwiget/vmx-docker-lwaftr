@@ -1,3 +1,6 @@
-junos*qcow2
+*qcow2
+*.o
+*.run
 license-eval.txt
 id_rsa.pub
+snabb

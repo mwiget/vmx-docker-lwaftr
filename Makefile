@@ -1,59 +1,35 @@
-all: build 
+all: build
 
-build:	src/Dockerfile
+build: snabb/src/snabb
+	cd snabb && make clean && make docker && make -j && cd src && make -j
 	docker-compose build
 
-buildclean: src/Dockerfile
-	docker-compose build --no-cache
+snabb/src/snabb:
+	git clone -b passthru https://github.com/mwiget/snabb
 
-up: build
-	docker-compose up -d
+pull:
+	docker-compose pull
+
+license-eval.txt:
+	curl -o license-eval.txt https://www.juniper.net/us/en/dm/free-vmx-trial/E421992502.txt
+
+id_rsa.pub:
+	cp ~/.ssh/id_rsa.pub .
+
+up:
+	docker-compose up -d --build
+	./start-snabb-lwaftr.sh &
 
 ps:
 	docker-compose ps
-
-query:
-	@echo 
-	@echo -n "xe0: "
-	@docker exec -ti $$(docker ps |grep _lwaftr|cut -d' ' -f1) \
-	  snabb lwaftr query xe0 >/dev/null \
-	  && docker exec -ti $$(docker ps |grep _lwaftr|cut -d' ' -f1) \
-	  snabb lwaftr query xe0 || echo "(missing)"
-	@echo 
-	@echo -n "xe1: "
-	@docker exec -ti $$(docker ps |grep _lwaftr|cut -d' ' -f1) \
-	  snabb lwaftr query xe1 >/dev/null \
-	  && docker exec -ti $$(docker ps |grep _lwaftr|cut -d' ' -f1) \
-	  snabb lwaftr query xe1 || echo "(missing)"
-	@echo 
-	@echo -n "xe2: "
-	@docker exec -ti $$(docker ps |grep _lwaftr|cut -d' ' -f1) \
-	  snabb lwaftr query xe2 >/dev/null \
-	  && docker exec -ti $$(docker ps |grep _lwaftr|cut -d' ' -f1) \
-	  snabb lwaftr query xe2 || echo "(missing)"
-	@echo 
-	@echo -n "xe3: "
-	@docker exec -ti $$(docker ps |grep _lwaftr|cut -d' ' -f1) \
-	  snabb lwaftr query xe3 >/dev/null \
-	  && docker exec -ti $$(docker ps |grep _lwaftr|cut -d' ' -f1) \
-	  snabb lwaftr query xe3 || echo "(missing)"
-
-logs:
-	docker logs -f $$(docker ps -a|grep _lwaftr|cut -d' ' -f1)
+	./getpass.sh
 
 down:
+	sudo pkill snabb || true
 	docker-compose down
-
-shell:
-	docker exec -ti $$(docker ps |grep _lwaftr|cut -d' ' -f1) bash
-
-attach:
-	./getpass.sh | grep lwaftr
-	docker attach $$(docker ps |grep _lwaftr|cut -d' ' -f1) 
-
-cpe:
-	docker exec -ti $$(docker ps | grep b4cpe|cut -d' ' -f1) bash
+	rm -f .*.pwd
 
 clean:
 	docker system prune -f
+	docker network prune -f
 

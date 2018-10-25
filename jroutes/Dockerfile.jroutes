@@ -1,0 +1,31 @@
+# Copyright (c) 2018, Juniper Networks, Inc.
+# All rights reserved.
+
+FROM ubuntu:17.10 AS proto
+RUN apt-get update && apt-get install -y python protobuf-compiler-grpc 
+COPY /proto /proto
+RUN mkdir grpc-py \
+  && protoc --proto_path=proto --python_out=grpc-py --grpc_out=grpc-py \
+  --plugin=protoc-gen-grpc=/usr/bin/grpc_python_plugin proto/*proto
+
+FROM alpine:3.7 AS grpc
+RUN apk add --no-cache \
+  py2-pip gcc g++ linux-headers make musl-dev python-dev \
+  && pip install protobuf grpcio
+
+FROM alpine:3.7
+RUN apk add --no-cache tini libgcc python libstdc++ py2-netaddr iputils # iproute2
+RUN apk add --no-cache --virtual build-dependencies git py2-pip \
+  && git clone -b 1.1.2 https://github.com/romana/multi-ping.git \
+  && cd multi-ping && python setup.py install \
+  && cd .. rm -rf multi-ping \
+  && apk del build-dependencies
+
+COPY --from=proto /grpc-py /usr/lib/python2.7/
+COPY --from=grpc /usr/lib/python2.7/site-packages /usr/lib/python2.7/site-packages/
+
+COPY jroutes*.py launch.sh /
+RUN chmod a+rx /*py /*sh
+
+#ENTRYPOINT ["/sbin/tini", "/launch.sh"]
+ENTRYPOINT ["/sbin/tini", "/usr/bin/python", "/jroutes.py"]

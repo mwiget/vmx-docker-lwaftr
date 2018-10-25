@@ -1,77 +1,112 @@
-version: "2.1"
+# Copyright (c) 2018, Juniper Networks, Inc.
+# # All rights reserved.
+#
+version: "2.3"
 
 services:
-  lwaftr:
-    build: src/
+
+  vmx1:
+    image: juniper/openjnpr-container-vmx:bionic
     privileged: true
     tty: true
     stdin_open: true
     ports:
       - "22"
       - "830"
+      - "50051"
+    container_name: vmx1
     environment:
+      - ID=vmx1
       - LICENSE=license-eval.txt
-      - IMAGE=junos-vmx-x86-64-17.3B1.1.qcow2
+      - IMAGE=junos-vmx-x86-64-18.3R1.9.qcow2
       - PUBLICKEY=id_rsa.pub
-      - CONFIG=lwaftr.conf.txt
-      - INTERFACES=03:00.0/10 04:00.0/12
+      - CONFIG=vmx1.conf
+      - YANG_PACKAGE=lwaftr
+      - YANG_SCHEMA=snabb-softwire-v2.yang ietf-inet-types.yang ietf-yang-types.yang
     volumes:
       - $PWD:/u:ro
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
-      default:
-      net-xe0:
-        ipv4_address: 172.20.1.16
-      net-xe1:
-        ipv4_address: 172.20.2.16
+      mgmt:
+      net-macvlan:
 
-  packetblaster:
-    build: packetblaster/
-    privileged: true
+  snabb-config:
+    build: snabb-config
     tty: true
     stdin_open: true
-    command: --b4 2001:db8::40,10.10.0.0,1024 --aftr 2001:db8:ffff::100 --count 60000 --rate 0.010 --size 128
+    restart: always
+    command: config listen lwaftr
+    environment:
+      - PORT=4321
+    ports:
+      - "4321"
+    volumes:
+      - /run/snabb:/run/snabb
     depends_on:
-      - lwaftr
+      - "vmx1"
     networks:
-      net-xe0:
-        ipv4_address: 172.20.1.254
-        ipv6_address: fd00:4601::100
+      mgmt:
 
-  b4cpe:
-    build: b4cpe/
+  veth-links:
+    build: veth-links
     privileged: true
+    network_mode: "service:vmx1"
+    restart: on-failure
+    environment:
+      - LINKCOUNT=8
+      - CONTAINER=vmx1
+    depends_on:
+      - "vmx1"
+
+  snabbvmx:
+    build: snabbvmx
     tty: true
     stdin_open: true
-    command: 193.5.1.2 1024-2047 fd00:4602::16 fd00:4602::16
+    entrypoint: /bin/ash
+    #command: 
+    restart: on-failure
+    volumes:
+      - $PWD:/u     # FIXME: not required in production
     depends_on:
-      - lwaftr
+      - "vmx1"
     networks:
-      net-xe1:
-        ipv6_address: fd00:4602::1001
+      mgmt:
 
-  server:
-    build: server/
-    privileged: true
+  jroutes:
+    build: jroutes
     tty: true
     stdin_open: true
+    #entrypoint: /bin/ash
+    command: --ipv4plen 29 --ipv6plen 64 -s 4321 -g vmx1 -P 50051 -u root snabb-config
+    restart: on-failure
+    volumes:
+      - $PWD:/u:ro
     depends_on:
-      - lwaftr
+      - "snabb-config"
+      - "vmx1"
     networks:
-      net-xe1:
-        ipv4_address: 172.20.2.254
+      mgmt:
+
+#  snabb-get-state:
+#    build: snabb-config
+#    pid: "service:lwaftr"
+#    tty: true
+#    stdin_open: true
+#    #    restart: always
+#    command: config get-state -s snabb-softwire-v2 lwaftr
+#    #entrypoint: /bin/ash
+#    environment:
+#      - PORT=4322
+#    ports:
+#      - "4322"
+#    volumes:
+#      - snabb-run:/run
+#    depends_on:
+#      - "lwaftr"
 
 networks:
-  default:
-  net-xe0:
-    enable_ipv6: true
-    ipam:
-      config:
-        - subnet: 172.20.1.0/24
-        - subnet: fd00:4601::/64
-  net-xe1:
-    enable_ipv6: true
-    ipam:
-      config:
-        - subnet: 172.20.2.0/24
-        - subnet: fd00:4602::/64
+  mgmt:
+  net-macvlan:
+    driver: macvlan
+    driver_opts:
+      parent: enp0s25
