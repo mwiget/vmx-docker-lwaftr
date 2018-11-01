@@ -1,3 +1,6 @@
+# Copyright (c) 2018, Juniper Networks, Inc.
+# All rights reserved.
+#
 all: build
 
 build: snabb/src/snabb
@@ -18,14 +21,15 @@ id_rsa.pub:
 
 up:
 	docker-compose up -d --build
-	./start-snabb-lwaftr.sh &
+	tools/start-snabb-lwaftr.sh &
 
 ps:
 	docker-compose ps
-	./getpass.sh
+	tools/getpass.sh
 
 down:
 	sudo pkill snabb || true
+	tools/remove-ssh-key.sh
 	docker-compose down
 	rm -f .*.pwd
 

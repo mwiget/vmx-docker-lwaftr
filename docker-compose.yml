@@ -22,30 +22,13 @@ services:
       - PUBLICKEY=id_rsa.pub
       - CONFIG=vmx1.conf
       - YANG_PACKAGE=lwaftr
-      - YANG_SCHEMA=snabb-softwire-v2.yang ietf-inet-types.yang ietf-yang-types.yang
+      - YANG_SCHEMA=snabb-softwire-v2.yang ietf-inet-types.yang ietf-yang-types.yang jnx-aug-softwire.yang
     volumes:
       - $PWD:/u:ro
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       mgmt:
       net-macvlan:
-
-  snabb-config:
-    build: snabb-config
-    tty: true
-    stdin_open: true
-    restart: always
-    command: config listen lwaftr
-    environment:
-      - PORT=4321
-    ports:
-      - "4321"
-    volumes:
-      - /run/snabb:/run/snabb
-    depends_on:
-      - "vmx1"
-    networks:
-      mgmt:
 
   veth-links:
     build: veth-links
@@ -60,29 +43,17 @@ services:
 
   snabbvmx:
     build: snabbvmx
+    privileged: true
     tty: true
+    #    pid: "host"
     stdin_open: true
     entrypoint: /bin/ash
-    #command: 
+    #command: --target vmx1 --user root --private_key /u/id_rsa
     restart: on-failure
     volumes:
-      - $PWD:/u     # FIXME: not required in production
-    depends_on:
-      - "vmx1"
-    networks:
-      mgmt:
-
-  jroutes:
-    build: jroutes
-    tty: true
-    stdin_open: true
-    #entrypoint: /bin/ash
-    command: --ipv4plen 29 --ipv6plen 64 -s 4321 -g vmx1 -P 50051 -u root snabb-config
-    restart: on-failure
-    volumes:
+      - /var/run/snabb:/var/run/snabb
       - $PWD:/u:ro
     depends_on:
-      - "snabb-config"
       - "vmx1"
     networks:
       mgmt:

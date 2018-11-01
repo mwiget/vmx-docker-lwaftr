@@ -1,0 +1,20 @@
+module jnx-aug-softwire {
+  namespace "http://yang.juniper.net/software/augment";
+  prefix "jnx-sw";
+
+  import snabb-softwire-v2 {prefix sw; }
+
+  organization "Juniper Networks, Inc.";
+
+  revision 2018-08-22 {
+    description
+      "Juniper software augments. ";
+  }
+
+  augment "/sw:softwire-config" {
+    leaf binding-table-file {
+      type string;
+      description "Complete path of the binding table file";
+    }
+  }
+}

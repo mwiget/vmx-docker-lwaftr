@@ -673,6 +673,27 @@ module snabb-softwire-v2 {
             }
           }
         }
+
+        container passthru-interface {
+          leaf device {
+            description
+             "tap interface to connect to";
+            type string;
+          }
+          leaf mac {
+            type yang:mac-address;
+            mandatory true;
+            description
+              "MAC address of packets to be passed thru to the tap interface (in addition to BUM traffic)";
+          }
+          leaf mtu {
+            type uint16;
+            default 1514;
+            description
+              "Maximum packet size to send on the passthru interface.";
+          }
+          uses vlan-tagging;
+        }
       }
 
       uses state-counters;
