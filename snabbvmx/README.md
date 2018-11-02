@@ -15,3 +15,19 @@ REPOSITORY                           TAG                 IMAGE ID            CRE
 vmx-docker-lwaftr_snabbvmx           latest              89a82e674176        26 minutes ago      96.2MB
 ```
 
+Example run:
+
+```
+$ docker logs -f vmx-docker-lwaftr_snabbvmx_1
+2018-11-02 12:23:28,202 - INFO - connecting to vmx1 mqtt port 1883 ...
+2018-11-02 12:23:28,203 - INFO - connecting to vmx1 gRPC port 50051 ...
+2018-11-02 12:23:28,230 - INFO - gRPC Login successful
+2018-11-02 12:23:28,232 - INFO - Successfully connected to BGP Route Service on vmx1
+2018-11-02 12:23:28,420 - INFO - received 6 lwaftr routes with 4 (out of 4) reachable next hops
+2018-11-02 12:23:28,432 - INFO - BgpRouteAdd routes successfully updated
+2018-11-02 12:23:28,432 - INFO - Connected with result code 0
+2018-11-02 12:23:28,432 - INFO - subscribed to UI_COMMIT_COMPLETED
+2018-11-02 12:23:28,621 - INFO - received 6 lwaftr routes with 4 (out of 4) reachable next hops
+2018-11-02 12:23:28,811 - INFO - received 6 lwaftr routes with 4 (out of 4) reachable next hops
+2018-11-02 12:23:29,003 - INFO - received 6 lwaftr routes with 4 (out of 4) reachable next hops
+```

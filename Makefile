@@ -3,12 +3,8 @@
 #
 all: build
 
-build: snabb/src/snabb
-	cd snabb && make clean && make docker && make -j && cd src && make -j
+build:
 	docker-compose build
-
-snabb/src/snabb:
-	git clone -b passthru https://github.com/mwiget/snabb
 
 pull:
 	docker-compose pull
