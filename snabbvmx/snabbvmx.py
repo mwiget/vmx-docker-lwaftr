@@ -6,6 +6,7 @@ from __future__ import print_function
 
 # import os.path
 import os
+import sys
 import argparse
 import logging
 import socket
@@ -72,11 +73,11 @@ def get_snabb_config(id):
         data = out.decode('ascii')
 
     if data:
-        logging.info("snabb: %s" % out)
+        logging.debug("snabb: %s" % out)
     if err:  # not really errors in case of snabb.
         logging.error("snabb: %s" % err)
     if p.returncode == 0:
-        logging.warning("snabb: running configuration successfully retrieved")
+        logging.info("snabb: running configuration successfully retrieved")
     else:
         logging.error("snabb: returned error {0}".format(p.returncode))
 
@@ -209,7 +210,7 @@ def read_binding_table(filename, out):
         logging.error(
             "Failed to read binding table from file %s exception: %s" % (filename, e.message))
         return
-    logging.warning("imported %d bindings from from %s" % (count, filename))
+    logging.info("imported %d bindings from from %s" % (count, filename))
     return
 
 
@@ -217,6 +218,7 @@ def query_config(userdata):
     logging.info("grab softwire config from " +
                  userdata.target + " as user " + userdata.username)
     logging.info("ssh private_key file " + userdata.private_key)
+    logging.basicConfig(level=logging.WARNING)
     try:
         pyez_client = Device(host=userdata.target, user=userdata.username,
                              ssh_private_key_file=userdata.private_key, gather_facts=False)
@@ -231,6 +233,7 @@ def query_config(userdata):
     ether = {}   # fill table indexed by snabb interface name containing mac address used by vMX
     iftable = EthPortTable(pyez_client)
     iftable.get()
+    logging.basicConfig(level=logging.INFO)
     for ifentry in iftable:
         if ifentry.description:
             elements = ifentry.description.split('@')
@@ -289,11 +292,11 @@ def query_config(userdata):
     with Popen([SNABB, "config", "load", "-s", "snabb-softwire-v2", userdata.snabbid, userdata.outputfile], stdout=PIPE, stderr=PIPE) as p:
         out, err = p.communicate()
         if out:
-            logging.warning("snabb: %s" % out)
+            logging.info("snabb: %s" % out)
         if err:  # not really errors in case of snabb.
-            logging.warning("snabb: %s" % err)
+            logging.info("snabb: %s" % err)
         if p.returncode == 0:
-            logging.warning("snabb: successfully loaded configuration")
+            logging.info("snabb: successfully loaded configuration")
         else:
             logging.error("snabb: returned error {0}".format(p.returncode))
     return
@@ -302,7 +305,7 @@ def query_config(userdata):
 def on_connect(client, userdata, flags, rc):
     logging.info("Connected with result code {0}".format(str(rc)))
     client.subscribe("/junos/events/syslog/UI_COMMIT_COMPLETED")
-    logging.warning("subscribed to UI_COMMIT_COMPLETED")
+    logging.info("subscribed to UI_COMMIT_COMPLETED")
 
 
 def on_message(client, userdata, msg):
@@ -331,7 +334,7 @@ def grpc_authenticate(channel, args):
             client_id=socket.gethostname()), _JET_TIMEOUT)
 
     if login_response.result == 1:
-        logging.warning("gRPC Login successful")
+        logging.info("gRPC Login successful")
     else:
         logging.error("gRPC Login failed")
         sys.exit(1)
@@ -367,12 +370,12 @@ def main():
     args = parser.parse_args()
 
     root = logging.getLogger()
-    root.setLevel(logging.WARNING)
+    root.setLevel(logging.INFO)
     root.propagate = False
     if args.debug:
         root.setLevel(logging.DEBUG)
 
-    ch = logging.StreamHandler()
+    ch = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     ch.setFormatter(formatter)
     root.handlers = [ch]
@@ -386,12 +389,12 @@ def main():
     if args.single:
         query_config(userdata=args)
     else:
-        logging.warning("connecting to " + args.target +
+        logging.info("connecting to " + args.target +
                      " mqtt port " + str(args.mqtt_port) + " ...")
         client = mqtt.Client(client_id=os.path.basename(
             __file__)+str(os.getpid()), userdata=args)
 
-        logging.warning("connecting to " + args.target +
+        logging.info("connecting to " + args.target +
                      " gRPC port " + str(args.grpc_port) + " ...")
         channel = grpc.insecure_channel(
             '%s:%d' % (args.target, args.grpc_port))
@@ -404,7 +407,7 @@ def main():
         if ((result.status != bgp_route_service_pb2.BgpRouteInitializeReply.SUCCESS) and
              (result.status != bgp_route_service_pb2.BgpRouteInitializeReply.SUCCESS_STATE_REBOUND)):
                  logging.error('Error on BgpRouteInitializeRequest')
-        logging.warning("Successfully connected to BGP Route Service on %s" % args.target)
+        logging.info("Successfully connected to BGP Route Service on %s" % args.target)
 
         old_routes = {}
         old_nexthops = {}
@@ -434,7 +437,7 @@ def main():
             reachable_nexthops_keys = sorted(new_nexthops.keys())
             reachable_v6_nh = [s for s in reachable_nexthops_keys if ":" in s]
             reachable_v4_nh = [s for s in reachable_nexthops_keys if "." in s]
-            logging.warning("received %d routes with %d (out of %d) reachable next hops" %
+            logging.info("received %d routes with %d (out of %d) reachable next hops" %
                   (len(new_routes), len(new_nexthops), len(new_nexthops)))
             logging.debug("reachable_v4_nh %s" % reachable_v4_nh)
             logging.debug("reachable_v6_nh %s" % reachable_v6_nh)
@@ -485,23 +488,23 @@ def main():
                     bgp_routes=rtremlist)
                 result = bgp.BgpRouteRemove(routeUpdReq, _JET_TIMEOUT)
                 if result.status > bgp_route_service_pb2.BgpRouteOperReply.SUCCESS:
-                    print("BgpRouteRemove failed with code", result.status)
+                    logging.error("BgpRouteRemove failed with code", result.status)
                 else:
-                    print("routes successfully removed")
+                    logging.info("BgpRouteRemove routes successfully removed")
 
             if len(rtlist) > 0:
                 routeUpdReq = bgp_route_service_pb2.BgpRouteUpdateRequest(
                     bgp_routes=rtlist)
                 result = bgp.BgpRouteUpdate(routeUpdReq, _JET_TIMEOUT)
                 if result.status > bgp_route_service_pb2.BgpRouteOperReply.SUCCESS:
-                    print("BgpRouteAdd failed with code", result.status)
+                    logging.error("BgpRouteAdd failed with code", result.status)
                 else:
-                    print("routes successfully updated")
+                    logging.info("BgpRouteAdd routes successfully updated")
 
             old_routes = new_routes
             data = ''
 
-            logging.info("--- idle ---")
+            logging.debug("--- idle ---")
 
 
 if __name__ == "__main__":

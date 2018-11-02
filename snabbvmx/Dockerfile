@@ -31,8 +31,9 @@ COPY --from=proto /grpc-py /usr/lib/python3.6/
 COPY --from=grpc /grpc/lib /usr/lib
 
 COPY --from=snabb /usr/local/bin/snabb /bin/
-COPY snabbvmx.py /
+COPY snabbvmx.py launch.sh /
 
 WORKDIR /u
 
-ENTRYPOINT ["/usr/bin/python3", "snabbvmx.py"]
+ENTRYPOINT ["/bin/sh", "/launch.sh"]
+#ENTRYPOINT ["/usr/bin/python3", "/snabbvmx.py"]
