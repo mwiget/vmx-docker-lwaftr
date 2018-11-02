@@ -6,7 +6,9 @@ services:
   - docker
 
 install:
-  - docker build -t vmx-docker-lwaftr src
+  - docker build -t snabbvmx snabbvmx
+  - docker build -t veth-links veth-links
 
 script:
-  - docker images | grep vmx-docker-lwaftr
+  - docker images | grep snabbvmx
+  - docker images | grep veth-links

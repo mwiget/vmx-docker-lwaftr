@@ -1,3 +1,7 @@
+## v2.0 [wip]
+
+- Nov 2018: Re-design around juniper/openjnpr-container-vmx:bionic and latest snabb lwaftr 
+
 ## v1.2.0:
 
 - Native forwarding engine (riot). Requires Junos 17.3
