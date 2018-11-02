@@ -77,7 +77,7 @@ def get_snabb_config(id):
     if err:  # not really errors in case of snabb.
         logging.error("snabb: %s" % err)
     if p.returncode == 0:
-        logging.info("snabb: running configuration successfully retrieved")
+        logging.debug("snabb: running configuration successfully retrieved")
     else:
         logging.error("snabb: returned error {0}".format(p.returncode))
 
@@ -437,7 +437,7 @@ def main():
             reachable_nexthops_keys = sorted(new_nexthops.keys())
             reachable_v6_nh = [s for s in reachable_nexthops_keys if ":" in s]
             reachable_v4_nh = [s for s in reachable_nexthops_keys if "." in s]
-            logging.info("received %d routes with %d (out of %d) reachable next hops" %
+            logging.info("received %d lwaftr routes with %d (out of %d) reachable next hops" %
                   (len(new_routes), len(new_nexthops), len(new_nexthops)))
             logging.debug("reachable_v4_nh %s" % reachable_v4_nh)
             logging.debug("reachable_v6_nh %s" % reachable_v6_nh)
