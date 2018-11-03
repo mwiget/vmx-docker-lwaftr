@@ -5,7 +5,7 @@
 # simple script to extract root passwords from vmx log file
 
 
-list=vmx1
+list="vmx1 dcgw"
 echo $list
 for vmx in $list; do
   descr=$(docker logs $vmx | grep 'root password' | cut -d' ' -f1-4,7 | tr -d '\r' || echo $vmx)
