@@ -5,7 +5,7 @@
 
 CONTAINER=vmx1
 LINKCOUNT=8
-CONFIG=snabb-60k.conf
+CONFIG=snabb-190.conf
 
 pid=$(docker inspect -f "{{.State.Pid}}" $CONTAINER)
 if [ -z "$pid" ]; then

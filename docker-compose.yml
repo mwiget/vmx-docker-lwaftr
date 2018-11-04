@@ -80,6 +80,25 @@ services:
     networks:
       mgmt:
 
+  packetblaster:
+    build: packetblaster/
+    container_name: packetblaster
+    privileged: true
+    tty: true
+    hostname: packetblaster
+    stdin_open: true
+    restart: on-failure
+    command: --ipv4 172.20.0.100 --b4 2001:db8::100,193.5.1.100,1024 --aftr fc00::100 --count 1 --rate 0.001 --size 128
+#    command: --ipv4 172.20.9.100 --b4 2001:db8::100,193.5.1.100,1024 --aftr fc00::100 --count 63000 --rate 0.001 --size 128
+    environment:
+      - LOCAL_IP=172.20.0.100/24
+      - DCGW_IP=172.20.0.2
+    depends_on:
+      - snabbvmx
+      - dcgw
+    networks:
+      net-macvlan:
+
 #  snabb-get-state:
 #    build: snabb-config
 #    pid: "service:lwaftr"
