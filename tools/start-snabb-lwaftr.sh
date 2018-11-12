@@ -14,8 +14,15 @@ if [ -z "$pid" ]; then
     exit 1
 fi
 
-echo "extracting runtime root password into .$CONTAINER.pwd"
-docker logs $CONTAINER | grep 'root password' | awk 'NF>1{print $NF}' > .$CONTAINER.pwd
+while :; do
+  echo "extracting runtime root password into .$CONTAINER.pwd"
+  docker logs $CONTAINER | grep 'root password' | awk 'NF>1{print $NF}' > .$CONTAINER.pwd
+  if [ -s .$CONTAINER.pwd ]; then
+    break
+  fi
+  echo "trying again in 5 seconds ..."
+  sleep 5
+done
 
 sudo mkdir -p /var/run/netns 2>/dev/null
 sudo ln -sf /proc/$pid/ns/net /var/run/netns/$CONTAINER

@@ -3,11 +3,15 @@
 #
 all: build
 
-build:
+build: snabb/src/snabb
+	cd snabb && make clean && make docker && make -j && cd src && make -j
 	docker-compose build
 
 pull:
 	docker-compose pull
+
+snabb/src/snabb:
+	git clone -b passthru https://github.com/mwiget/snabb
 
 license-eval.txt:
 	curl -o license-eval.txt https://www.juniper.net/us/en/dm/free-vmx-trial/E421992502.txt

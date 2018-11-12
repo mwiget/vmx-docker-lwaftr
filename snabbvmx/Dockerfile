@@ -16,7 +16,7 @@ FROM alpine:${ALPINE_VERSION} AS grpc
 RUN apk add --no-cache gcc g++ linux-headers \
     make musl-dev python3-dev \
     && pip3 install --install-option="--prefix=/grpc" \
-    --ignore-installed protobuf grpcio
+    --ignore-installed protobuf==3.6.1 grpcio==1.16.0
 
 FROM alpine:${ALPINE_VERSION} AS snabb
 
