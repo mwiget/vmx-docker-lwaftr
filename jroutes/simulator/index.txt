@@ -1,0 +1,1 @@
+config get -s snabb-softwire-v2 lwaftr /:sim-snabb-get-cfg.txt

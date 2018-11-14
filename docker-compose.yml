@@ -63,30 +63,31 @@ services:
     depends_on:
       - "vmx1"
 
-#  jroutes:
-#    build: jroutes
-#    privileged: true
-#    pid: host
-#    tty: true
-#    stdin_open: true
-#    entrypoint: /bin/ash
-#    #command: --target vmx1 --user root --private_key /u/id_rsa
-#    restart: on-failure
-#    volumes:
-#      - /run/snabb:/run/snabb
-#      - $PWD:/u:ro
-#    depends_on:
-#      - "vmx1"
-#    networks:
-#      mgmt:
+  jroutes:
+    build: jroutes
+    privileged: true
+    pid: host
+    tty: true
+    stdin_open: true
+    entrypoint: /bin/ash
+    #command: --target vmx1 --user root --private_key /u/id_rsa
+    restart: on-failure
+    volumes:
+      - /run/snabb:/run/snabb
+      - $PWD/jroutes:/root/go/src/github.com/juniper/vmx-docker-lwaftr/jroutes
+      - $PWD:/u:ro
+    depends_on:
+      - "vmx1"
+    networks:
+      mgmt:
 
   snabbvmx:
     build: snabbvmx
     privileged: true
     tty: true
     stdin_open: true
-    #entrypoint: /bin/ash
-    command: --target vmx1 --user root --private_key /u/id_rsa
+    entrypoint: /bin/ash
+    #command: --target vmx1 --user root --private_key /u/id_rsa
     restart: on-failure
     volumes:
       - /run/snabb:/run/snabb
