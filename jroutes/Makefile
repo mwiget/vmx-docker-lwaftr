@@ -1,3 +1,6 @@
+# Copyright (c) 2018, Juniper Networks, Inc.
+# All rights reserved.
+#
 all: build run
 
 build:
@@ -21,14 +24,3 @@ stubs:
 	protoc -I proto --go_out=plugins=grpc:stubs/authentication proto/authentication_service.proto
 	protoc -I proto --go_out=plugins=grpc:stubs/jnx_addr proto/jnx_addr.proto proto/jnx_base_types.proto
 	protoc -I proto --go_out=plugins=grpc,Mjnx_addr.proto=github.com/juniper/vmx-docker-lwaftr/jroutes/stubs/jnx_addr:stubs/routing  proto/bgp_route_service.proto proto/prpd_common.proto
-
-broken:
-	@mkdir -p stubs || true
-	@mkdir -p stubs/authentication || true
-	@mkdir -p stubs/bgp_route || true
-	@mkdir -p stubs/jnx_addr || true
-	@mkdir -p stubs/prpd_common || true
-	protoc -I proto --go_out=plugins=grpc:stubs/authentication proto/authentication_service.proto
-	protoc -I proto --go_out=plugins=grpc:stubs/jnx_addr proto/jnx_addr.proto proto/jnx_base_types.proto
-	protoc -I proto --go_out=plugins=grpc:Mjnx_addr.proto=../jnx_addr:stubs/prpd_common proto/prpd_common.proto
-	protoc -I proto --go_out=plugins=grpc:Mjnx_addr.proto=../jnx_addr:stubs/bgp_route proto/bgp_route_service.proto 
