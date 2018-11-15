@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"os"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -21,7 +21,6 @@ import (
 type GrpcSession struct {
 	conn       *grpc.ClientConn
 	cbgp       routing.BgpRouteClient
-	cookie     uint64
 	oldRoutes  map[string][]string
 	ipv4prefix int
 	ipv6prefix int
@@ -37,7 +36,7 @@ func (g *GrpcSession) GrpcDial(host *string, grpcPort int, user *string, id *str
 	g.oldRoutes = make(map[string][]string)
 	g.ipv4prefix = ipv4prefix
 	g.ipv6prefix = ipv6prefix
-	g.cookie = uint64(os.Getpid())
+	g.cbgp = nil
 
 	pwd, err := ioutil.ReadFile("." + *host + ".pwd")
 	if err != nil {
@@ -65,18 +64,6 @@ func (g *GrpcSession) GrpcDial(host *string, grpcPort int, user *string, id *str
 		return (false)
 	}
 	log.Printf("gRPC authenticated to %s as %s", hostname, *user)
-
-	c := routing.NewBgpRouteClient(g.conn)
-
-	var bgpRouteInit routing.BgpRouteInitializeRequest
-	_, err = c.BgpRouteInitialize(context.Background(), &bgpRouteInit)
-	if err != nil {
-		log.Fatalf("BGP route service initialization failed: %s", err)
-		return (false)
-	}
-
-	g.cbgp = c
-	log.Println("BGP route service initialized.")
 
 	return dat.Result
 }
@@ -151,20 +138,41 @@ func (g *GrpcSession) UpdateRoutes(rt *ipmap, nh *ipmap) bool {
 
 	fmt.Println("new routes with next-hops:", newRoutes)
 
-	// insert DictDiffer here
-	changedRoutes := newRoutes
+	if reflect.DeepEqual(newRoutes, g.oldRoutes) {
+		log.Println("no change in routes or next-hop detected")
+		return true
+	}
 
-	fmt.Println("changed routes with next-hops:", changedRoutes)
+	if g.cbgp != nil {
+		// cleanup first
+		c := g.cbgp
+		var bgpRouteCleanupRequest routing.BgpRouteCleanupRequest
+		cleanup, err := c.BgpRouteCleanup(context.Background(), &bgpRouteCleanupRequest)
+		if err != nil {
+			log.Fatalf("BgpRouteCleanup failed: %v", err)
+			return false
+		}
+		log.Printf("BgpRouteCleanup %v", cleanup.Status)
+	}
 
-	c := g.cbgp
+	c := routing.NewBgpRouteClient(g.conn)
+
+	var bgpRouteInit routing.BgpRouteInitializeRequest
+	_, err := c.BgpRouteInitialize(context.Background(), &bgpRouteInit)
+	if err != nil {
+		log.Fatalf("BGP route service initialization failed: %s", err)
+		return (false)
+	}
+	g.cbgp = c
+	log.Println("BGP route service initialized.")
 
 	var bgpRouteUpdateReq routing.BgpRouteUpdateRequest
 
-	for route := range changedRoutes {
+	for route := range newRoutes {
 		routePrefix, prefixLen, routeTable := BuildRoute(route, g.ipv4prefix, g.ipv6prefix)
 
 		// only single nh per route supported today, hence we create multiple route entries per nh
-		for i := range changedRoutes[route] {
+		for i := range newRoutes[route] {
 			var bgpRouteEntry routing.BgpRouteEntry
 			bgpRouteEntry.DestPrefix = &routePrefix
 			bgpRouteEntry.DestPrefixLen = prefixLen
@@ -173,7 +181,7 @@ func (g *GrpcSession) UpdateRoutes(rt *ipmap, nh *ipmap) bool {
 			bgpRouteEntry.PathCookie = uint64(i)
 			bgpRouteEntry.RouteType = routing.BgpPeerType_BGP_INTERNAL
 			var nhAddrString jnx_addr.IpAddress_AddrString
-			nhAddrString.AddrString = changedRoutes[route][i]
+			nhAddrString.AddrString = newRoutes[route][i]
 			var nhIPAddr jnx_addr.IpAddress
 			nhIPAddr.AddrFormat = &nhAddrString
 			bgpRouteEntry.ProtocolNexthops = append(bgpRouteEntry.ProtocolNexthops, &nhIPAddr)

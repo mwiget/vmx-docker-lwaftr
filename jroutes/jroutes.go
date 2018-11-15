@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net"
+	"time"
 )
 
 type ipmap map[string]int
@@ -74,5 +75,7 @@ func main() {
 	}
 
 	g.UpdateRoutes(&s.rt, &s.nh)
-
+	log.Println("sleeping for 5 seconds, then run it again")
+	time.Sleep(5 * time.Second)
+	g.UpdateRoutes(&s.rt, &s.nh)
 }
