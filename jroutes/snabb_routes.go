@@ -53,8 +53,7 @@ func (s *Snabbroutes) SnabbFetch(snabbIDPtr *string, ipmask *ipmask) int {
 			case "ipv4":
 				s.rt[ipmask.Mask(ip)]++
 			case "br-address":
-				ip := net.ParseIP(ip)
-				s.rt[ip.String()]++
+				s.rt[ipmask.Mask(ip)]++
 			case "ip":
 				ip := net.ParseIP(ip)
 				s.nh[ip.String()]++

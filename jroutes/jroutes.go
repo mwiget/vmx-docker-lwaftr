@@ -53,7 +53,7 @@ func main() {
 
 	g := GrpcSession{}
 
-	g.GrpcDial(targetPtr, grpcPort, userPtr, snabbIDPtr)
+	g.GrpcDial(targetPtr, grpcPort, userPtr, snabbIDPtr, ipv4prefix, ipv6prefix)
 
 	ipmask := ipmask{}
 	ipmask.Set(ipv4prefix, ipv6prefix)
@@ -72,5 +72,7 @@ func main() {
 			log.Printf("active next-hop: %s\n", key)
 		}
 	}
+
+	g.UpdateRoutes(&s.rt, &s.nh)
 
 }

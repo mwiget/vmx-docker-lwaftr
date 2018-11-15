@@ -2,29 +2,42 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
+	"os"
 	"strconv"
 	"strings"
 
 	"google.golang.org/grpc"
 
 	authentication "github.com/juniper/vmx-docker-lwaftr/jroutes/stubs/authentication"
+	jnx_addr "github.com/juniper/vmx-docker-lwaftr/jroutes/stubs/jnx_addr"
 	routing "github.com/juniper/vmx-docker-lwaftr/jroutes/stubs/routing"
 )
 
 // GrpcSession contains gRPC connection handle
 type GrpcSession struct {
-	conn *grpc.ClientConn
-	cbgp *routing.BgpRouteClient
+	conn       *grpc.ClientConn
+	cbgp       routing.BgpRouteClient
+	cookie     uint64
+	oldRoutes  map[string][]string
+	ipv4prefix int
+	ipv6prefix int
 }
 
 // GrpcDial opens gRPC session to host
-func (g *GrpcSession) GrpcDial(host *string, grpcPort int, user *string, id *string) bool {
+func (g *GrpcSession) GrpcDial(host *string, grpcPort int, user *string, id *string, ipv4prefix int, ipv6prefix int) bool {
 
 	var opts []grpc.DialOption
 
 	log.SetFlags(log.LstdFlags)
+
+	g.oldRoutes = make(map[string][]string)
+	g.ipv4prefix = ipv4prefix
+	g.ipv6prefix = ipv6prefix
+	g.cookie = uint64(os.Getpid())
 
 	pwd, err := ioutil.ReadFile("." + *host + ".pwd")
 	if err != nil {
@@ -62,8 +75,124 @@ func (g *GrpcSession) GrpcDial(host *string, grpcPort int, user *string, id *str
 		return (false)
 	}
 
-	g.cbgp = &c
+	g.cbgp = c
 	log.Println("BGP route service initialized.")
 
 	return dat.Result
+}
+
+// BuildRoute returns prefix, len and table from a given ip route string with the correct types
+func BuildRoute(routeStr string, ipv4prefix int, ipv6prefix int) (route routing.RoutePrefix, prefix uint32, routeTable routing.RouteTable) {
+
+	var routeAddrString jnx_addr.IpAddress_AddrString
+	routeAddrString.AddrString = routeStr
+
+	var routeIPAddr jnx_addr.IpAddress
+	routeIPAddr.AddrFormat = &routeAddrString
+
+	var rtTableName routing.RouteTableName
+	var routePrefix routing.RoutePrefix
+	var prefixLen uint32
+
+	ip := net.ParseIP(routeStr)
+	if ip.To4() != nil {
+		rtTableName.Name = "inet.0"
+		var routePrefixInet routing.RoutePrefix_Inet
+		routePrefixInet.Inet = &routeIPAddr
+		routePrefix.RoutePrefixAf = &routePrefixInet
+		prefixLen = uint32(ipv4prefix)
+	} else {
+		rtTableName.Name = "inet6.0"
+		var routePrefixInet routing.RoutePrefix_Inet6
+		routePrefixInet.Inet6 = &routeIPAddr
+		routePrefix.RoutePrefixAf = &routePrefixInet
+		prefixLen = uint32(ipv6prefix)
+	}
+
+	var rtTableFormat routing.RouteTable_RttName
+	rtTableFormat.RttName = &rtTableName
+
+	var rtTable routing.RouteTable
+	rtTable.RtTableFormat = &rtTableFormat
+
+	return routePrefix, prefixLen, rtTable
+}
+
+// UpdateRoutes in BGP with multiple next-hop after comparing with last update
+func (g *GrpcSession) UpdateRoutes(rt *ipmap, nh *ipmap) bool {
+
+	var v4nh []string
+	var v6nh []string
+
+	newRoutes := make(map[string][]string)
+
+	// separate v4 from v6 next hops into slices
+	for nexthop := range *nh {
+		ip := net.ParseIP(nexthop)
+		if ip.To4() != nil {
+			v4nh = append(v4nh, nexthop)
+		} else {
+			v6nh = append(v6nh, nexthop)
+		}
+	}
+
+	fmt.Println("v4 next-hops:", v4nh)
+	fmt.Println("v6 next-hops:", v6nh)
+
+	// attach next-hops to unique routes based on inet family
+	for route := range *rt {
+		ip := net.ParseIP(route)
+		if ip.To4() != nil {
+			newRoutes[route] = v4nh
+		} else {
+			newRoutes[route] = v6nh
+		}
+	}
+
+	fmt.Println("new routes with next-hops:", newRoutes)
+
+	// insert DictDiffer here
+	changedRoutes := newRoutes
+
+	fmt.Println("changed routes with next-hops:", changedRoutes)
+
+	c := g.cbgp
+
+	var bgpRouteUpdateReq routing.BgpRouteUpdateRequest
+
+	for route := range changedRoutes {
+		routePrefix, prefixLen, routeTable := BuildRoute(route, g.ipv4prefix, g.ipv6prefix)
+
+		// only single nh per route supported today, hence we create multiple route entries per nh
+		for i := range changedRoutes[route] {
+			var bgpRouteEntry routing.BgpRouteEntry
+			bgpRouteEntry.DestPrefix = &routePrefix
+			bgpRouteEntry.DestPrefixLen = prefixLen
+			bgpRouteEntry.Table = &routeTable
+			bgpRouteEntry.Protocol = routing.RouteProtocol_PROTO_BGP_STATIC
+			bgpRouteEntry.PathCookie = uint64(i)
+			bgpRouteEntry.RouteType = routing.BgpPeerType_BGP_INTERNAL
+			var nhAddrString jnx_addr.IpAddress_AddrString
+			nhAddrString.AddrString = changedRoutes[route][i]
+			var nhIPAddr jnx_addr.IpAddress
+			nhIPAddr.AddrFormat = &nhAddrString
+			bgpRouteEntry.ProtocolNexthops = append(bgpRouteEntry.ProtocolNexthops, &nhIPAddr)
+			bgpRouteUpdateReq.BgpRoutes = append(bgpRouteUpdateReq.BgpRoutes, &bgpRouteEntry)
+			if strings.Contains(route, ":") {
+				log.Printf("Inet6 %v Prefix: %s", bgpRouteEntry.GetTable().GetRttName(), bgpRouteEntry.GetDestPrefix().GetInet6())
+			} else {
+				log.Printf("Inet  %v Prefix: %s", bgpRouteEntry.GetTable().GetRttName(), bgpRouteEntry.GetDestPrefix().GetInet())
+			}
+		}
+	}
+	r, err := c.BgpRouteAdd(context.Background(), &bgpRouteUpdateReq)
+	if err != nil {
+		log.Fatalf("Couldn't send RPC: %v", err)
+		return false
+	}
+
+	log.Printf("Status: %v", r.Status)
+	log.Printf("OperationsCompleted: %d", r.OperationsCompleted)
+
+	return true
 }
