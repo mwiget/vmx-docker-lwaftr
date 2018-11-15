@@ -18,6 +18,7 @@ RUN apk add --no-cache build-base git go-bootstrap go protobuf \
   && go get github.com/golang/protobuf/protoc-gen-go \
   && go get github.com/Juniper/go-netconf/netconf \
   && go get google.golang.org/grpc \
+  && go get github.com/eclipse/paho.mqtt.golang \
   && mkdir -p /root/go/src/github.com/vmx-docker-lwaftr/jroutes
 
 COPY . /root/go/src/github.com/vmx-docker-lwaftr/jroutes

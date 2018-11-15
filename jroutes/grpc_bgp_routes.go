@@ -1,3 +1,6 @@
+// Copyright (c) 2018, Juniper Networks, Inc.
+// All rights reserved.
+
 package main
 
 import (
@@ -152,6 +155,7 @@ func (g *GrpcSession) UpdateRoutes(rt *ipmap, nh *ipmap) bool {
 			log.Fatalf("BgpRouteCleanup failed: %v", err)
 			return false
 		}
+		g.cbgp = nil
 		log.Printf("BgpRouteCleanup %v", cleanup.Status)
 	}
 
