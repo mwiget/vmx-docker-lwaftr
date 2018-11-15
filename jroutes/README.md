@@ -1,11 +1,20 @@
 # jroutes container
 
-wip
+[wip]
+
+Working jroutes container uses just 20 Mbytes:
+
+```
+$ docker images |head -2
+REPOSITORY                           TAG                 IMAGE ID            CREATED             SIZE
+vmx-docker-lwaftr_jroutes            latest              859f16725848        56 seconds ago      20.4MB
+```
+
 
 Example run with a bgp flap (clear bgp neighbor x) triggering bfd session flap and mqtt events:
 
 ```
-/u # cd /tmp; go build github.com/juniper/vmx-docker-lwaftr/jroutes && cd /u && /tmp/jroutes -d
+/u # jroutes
 2018/11/15 21:02:15 gRPC authenticated to vmx1:50051 as root
 2018/11/15 21:02:15 subscribed via MQTT to vmx1
 2018/11/15 21:02:15 active next-hop: 2001:db8::100

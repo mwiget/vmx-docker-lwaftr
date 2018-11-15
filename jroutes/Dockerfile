@@ -11,8 +11,7 @@ ENV SNABB_BRANCH "passthru"
 RUN apk add --no-cache libgcc alpine-sdk gcc libpcap-dev linux-headers findutils \
   && git clone --branch ${SNABB_BRANCH} ${SNABB_REPO} && cd snabb && make -j
 
-FROM alpine:${ALPINE_VERSION}
-# libc6-compat 
+FROM alpine:${ALPINE_VERSION} as build
 RUN apk add --no-cache build-base git go-bootstrap go protobuf \
   && go get github.com/golang/protobuf/proto \
   && go get github.com/golang/protobuf/protoc-gen-go \
@@ -34,16 +33,20 @@ RUN cd /root/go/src/github.com/vmx-docker-lwaftr/jroutes \
   && protoc -I proto --go_out=plugins=grpc:stubs/authentication proto/authentication_service.proto \
   && protoc -I proto --go_out=plugins=grpc:stubs/bgp_route proto/bgp_route_service.proto \
   && protoc -I proto --go_out=plugins=grpc:stubs/jnx_addr proto/jnx_addr.proto \
-  && protoc -I proto --go_out=plugins=grpc:stubs/prpd_common proto/prpd_common.proto 
+  && protoc -I proto --go_out=plugins=grpc:stubs/prpd_common proto/prpd_common.proto
 
-#COPY --from=proto /grpc-py /usr/lib/python3.6/
-#COPY --from=grpc /grpc/lib /usr/lib
+COPY . /root/go/src/github.com/juniper/vmx-docker-lwaftr/jroutes
+RUN cd / && go build github.com/juniper/vmx-docker-lwaftr/jroutes && strip jroutes
 
+FROM alpine:${ALPINE_VERSION} 
+RUN apk add --no-cache libgcc 
+
+COPY --from=build /jroutes /bin
 COPY --from=snabb /snabb/src/snabb /bin
 COPY /simulator /simulator
 
 #ENV GOPATH=/root/go
-ENV PATH=${PATH}:/root/go/bin
+#ENV PATH=${PATH}:/root/go/bin
 
 WORKDIR /u
 
