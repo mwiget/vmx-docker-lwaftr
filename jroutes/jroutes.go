@@ -98,26 +98,27 @@ func main() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 
 	for {
+		s := Snabbroutes{}
+		s.SnabbFetch(snabbIDPtr, &ipmask)
+
+		b := Bfdsessions{}
+		b.BfdFetch(targetPtr, userPtr, &ipmask)
+
+		// eliminate next-hops on links with bfd session in Down state
+		dropUnreach(&s, &b, &ipmask)
+
+		if *debugPtr {
+			for key := range s.nh {
+				log.Printf("active next-hop: %s\n", key)
+			}
+		}
+		g.UpdateRoutes(&s.rt, &s.nh)
+
 		select {
 		case incoming := <-choke:
 			topic := incoming[0]
 			log.Printf("incoming MQTT message: %s", topic)
 
-			s := Snabbroutes{}
-			s.SnabbFetch(snabbIDPtr, &ipmask)
-
-			b := Bfdsessions{}
-			b.BfdFetch(targetPtr, userPtr, &ipmask)
-
-			// eliminate next-hops on links with bfd session in Down state
-			dropUnreach(&s, &b, &ipmask)
-
-			if *debugPtr {
-				for key := range s.nh {
-					log.Printf("active next-hop: %s\n", key)
-				}
-			}
-			g.UpdateRoutes(&s.rt, &s.nh)
 		case c := <-sigs:
 			if c == syscall.SIGINT || c == syscall.SIGTERM || c == syscall.SIGKILL {
 				client.Disconnect(250)
