@@ -20,11 +20,9 @@ RUN apk add --no-cache build-base git go-bootstrap go protobuf \
   && go get github.com/eclipse/paho.mqtt.golang \
   && mkdir -p /root/go/src/github.com/vmx-docker-lwaftr/jroutes
 
-COPY . /root/go/src/github.com/vmx-docker-lwaftr/jroutes
-
 COPY . /root/go/src/github.com/juniper/vmx-docker-lwaftr/jroutes
 
-RUN cd /root/go/src/github.com/vmx-docker-lwaftr/jroutes \
+RUN cd /root/go/src/github.com/juniper/vmx-docker-lwaftr/jroutes \
   && export PATH=${PATH}:/root/go/bin \
   && mkdir -p stubs \
   && mkdir -p stubs/authentication \
