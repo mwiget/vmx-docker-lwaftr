@@ -22,6 +22,8 @@ RUN apk add --no-cache build-base git go-bootstrap go protobuf \
 
 COPY . /root/go/src/github.com/vmx-docker-lwaftr/jroutes
 
+COPY . /root/go/src/github.com/juniper/vmx-docker-lwaftr/jroutes
+
 RUN cd /root/go/src/github.com/vmx-docker-lwaftr/jroutes \
   && export PATH=${PATH}:/root/go/bin \
   && mkdir -p stubs \
@@ -35,8 +37,9 @@ RUN cd /root/go/src/github.com/vmx-docker-lwaftr/jroutes \
   && protoc -I proto --go_out=plugins=grpc:stubs/jnx_addr proto/jnx_addr.proto \
   && protoc -I proto --go_out=plugins=grpc:stubs/prpd_common proto/prpd_common.proto
 
-COPY . /root/go/src/github.com/juniper/vmx-docker-lwaftr/jroutes
 RUN cd / && go build github.com/juniper/vmx-docker-lwaftr/jroutes && strip jroutes
+
+# Build main image
 
 FROM alpine:${ALPINE_VERSION} 
 RUN apk add --no-cache libgcc 
@@ -45,9 +48,6 @@ COPY --from=build /jroutes /bin
 COPY --from=snabb /snabb/src/snabb /bin
 COPY /simulator /simulator
 
-#ENV GOPATH=/root/go
-#ENV PATH=${PATH}:/root/go/bin
-
 WORKDIR /u
 
-ENTRYPOINT ["/bin/ash"]
+ENTRYPOINT ["/bin/jroutes"]
