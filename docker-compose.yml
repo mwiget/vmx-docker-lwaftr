@@ -69,13 +69,13 @@ services:
     pid: host
     tty: true
     stdin_open: true
-    entrypoint: /bin/ash
-    #command: --target vmx1 --user root --private_key /u/id_rsa
+    #entrypoint: /bin/ash
+    command: --target vmx1 --user root --snabbid lwaftr --grpc_port 50051 --mqtt_port 1883
     restart: on-failure
     volumes:
       - /run/snabb:/run/snabb
-      - $PWD/jroutes:/root/go/src/github.com/juniper/vmx-docker-lwaftr/jroutes
       - $PWD:/u:ro
+        #      - $PWD/jroutes:/root/go/src/github.com/juniper/vmx-docker-lwaftr/jroutes
     depends_on:
       - "vmx1"
     networks:
