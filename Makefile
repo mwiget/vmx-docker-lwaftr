@@ -21,7 +21,7 @@ id_rsa.pub:
 
 up:
 	docker-compose up -d --build
-	tools/start-snabb-lwaftr.sh &
+	./start-snabb-lwaftr.sh &
 
 ps:
 	docker-compose ps

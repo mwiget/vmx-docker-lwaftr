@@ -21,14 +21,41 @@ services:
       - IMAGE=junos-vmx-x86-64-18.3R1.9.qcow2
       - PUBLICKEY=id_rsa.pub
       - CONFIG=vmx1.conf
-      - YANG_PACKAGE=lwaftr
-      - YANG_SCHEMA=snabb-softwire-v2.yang ietf-inet-types.yang ietf-yang-types.yang jnx-aug-softwire.yang
     volumes:
       - $PWD:/u:ro
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       mgmt:
       net-macvlan:
+
+  veth-links:
+    build: veth-links
+    privileged: true
+    network_mode: "service:vmx1"
+    restart: on-failure
+    volumes:
+      - $PWD:/u:ro
+    environment:
+      - SNABBCONFIG=snabb-6300.conf
+      - CONTAINER=vmx1
+    depends_on:
+      - "vmx1"
+
+  jroutes:
+    build: jroutes
+    privileged: true
+    pid: host
+    tty: true
+    stdin_open: true
+    command: --target vmx1 --user root --snabbid lwaftr --grpc_port 50051 --mqtt_port 1883
+    restart: on-failure
+    volumes:
+      - /run/snabb:/run/snabb
+      - $PWD:/u:ro
+    depends_on:
+      - "vmx1"
+    networks:
+      mgmt:
 
   dcgw:
     image: juniper/openjnpr-container-vmx:bionic
@@ -52,51 +79,6 @@ services:
       mgmt:
       net-macvlan:
 
-  veth-links:
-    build: veth-links
-    privileged: true
-    network_mode: "service:vmx1"
-    restart: on-failure
-    environment:
-      - LINKCOUNT=8
-      - CONTAINER=vmx1
-    depends_on:
-      - "vmx1"
-
-  jroutes:
-    build: jroutes
-    privileged: true
-    pid: host
-    tty: true
-    stdin_open: true
-    #entrypoint: /bin/ash
-    command: --target vmx1 --user root --snabbid lwaftr --grpc_port 50051 --mqtt_port 1883
-    restart: on-failure
-    volumes:
-      - /run/snabb:/run/snabb
-      - $PWD:/u:ro
-        #      - $PWD/jroutes:/root/go/src/github.com/juniper/vmx-docker-lwaftr/jroutes
-    depends_on:
-      - "vmx1"
-    networks:
-      mgmt:
-
-  snabbvmx:
-    build: snabbvmx
-    privileged: true
-    tty: true
-    stdin_open: true
-    entrypoint: /bin/ash
-    #command: --target vmx1 --user root --private_key /u/id_rsa
-    restart: on-failure
-    volumes:
-      - /run/snabb:/run/snabb
-      - $PWD:/u:ro
-    depends_on:
-      - "vmx1"
-    networks:
-      mgmt:
-
   packetblaster:
     build: packetblaster/
     container_name: packetblaster
@@ -105,8 +87,7 @@ services:
     hostname: packetblaster
     stdin_open: true
     restart: on-failure
-    command: --ipv4 172.20.0.100 --b4 2001:db8::100,193.5.1.100,1024 --aftr fc00::100 --count 1 --rate 0.001 --size 128
-#    command: --ipv4 172.20.9.100 --b4 2001:db8::100,193.5.1.100,1024 --aftr fc00::100 --count 63000 --rate 0.001 --size 128
+    command: --ipv4 203.0.113.1 --b4 2001:db8::100,192.0.2.1,1024 --aftr fc00::100 --count 6300 --rate 0.001 --size 128
     environment:
       - LOCAL_IP=172.20.0.100/24
       - DCGW_IP=172.20.0.2
@@ -115,23 +96,6 @@ services:
       - dcgw
     networks:
       net-macvlan:
-
-#  snabb-get-state:
-#    build: snabb-config
-#    pid: "service:lwaftr"
-#    tty: true
-#    stdin_open: true
-#    #    restart: always
-#    command: config get-state -s snabb-softwire-v2 lwaftr
-#    #entrypoint: /bin/ash
-#    environment:
-#      - PORT=4322
-#    ports:
-#      - "4322"
-#    volumes:
-#      - snabb-run:/run
-#    depends_on:
-#      - "lwaftr"
 
 networks:
   mgmt:

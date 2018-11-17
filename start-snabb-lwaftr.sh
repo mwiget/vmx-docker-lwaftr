@@ -4,8 +4,7 @@
 #
 
 CONTAINER=vmx1
-LINKCOUNT=8
-CONFIG=snabb-190.conf
+CONFIG=snabb-6300.conf
 
 pid=$(docker inspect -f "{{.State.Pid}}" $CONTAINER)
 if [ -z "$pid" ]; then
@@ -26,15 +25,10 @@ done
 
 sudo mkdir -p /var/run/netns 2>/dev/null
 sudo ln -sf /proc/$pid/ns/net /var/run/netns/$CONTAINER
-for n in $(seq $LINKCOUNT)
-do
-  m=$(($n - 1))
-  mac=$(sudo ip netns exec $CONTAINER ifconfig xe$m |grep ether|awk '{print $2}')
-  export eval macxe$m=$mac
-done
-envsubst < $CONFIG > $CONFIG.run
+
 while :; do
-  sudo ip netns exec $CONTAINER snabb/src/snabb lwaftr run --conf $CONFIG.run -n lwaftr
+  echo sudo ip netns exec $CONTAINER snabb/src/snabb lwaftr run --conf $CONFIG -n lwaftr
+  sudo ip netns exec $CONTAINER snabb/src/snabb lwaftr run --conf $CONFIG -n lwaftr
   echo "restarting snabb in 5 seconds ..."
 sleep 5
 done
