@@ -5,7 +5,7 @@
 
 ## Overview
 
-![Architecture](docs/vmx-docker-lwaftr.jpg)
+![Architecture](docs/vmx-docker-lwaftr.png)
 
 
 
