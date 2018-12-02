@@ -15,9 +15,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	authentication "github.com/juniper/vmx-docker-lwaftr/jroutes/stubs/authentication"
-	jnx_addr "github.com/juniper/vmx-docker-lwaftr/jroutes/stubs/jnx_addr"
-	routing "github.com/juniper/vmx-docker-lwaftr/jroutes/stubs/routing"
+	authentication "github.com/Juniper/vmx-docker-lwaftr/jroutes/stubs/authentication"
+	jnx_addr "github.com/Juniper/vmx-docker-lwaftr/jroutes/stubs/jnx_addr"
+	routing "github.com/Juniper/vmx-docker-lwaftr/jroutes/stubs/routing"
 )
 
 // GrpcSession contains gRPC connection handle

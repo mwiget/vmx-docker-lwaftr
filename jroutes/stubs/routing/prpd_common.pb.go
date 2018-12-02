@@ -6,7 +6,7 @@ package routing
 import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
-	jnx_addr "github.com/juniper/vmx-docker-lwaftr/jroutes/stubs/jnx_addr"
+	jnx_addr "github.com/Juniper/vmx-docker-lwaftr/jroutes/stubs/jnx_addr"
 	math "math"
 )
 

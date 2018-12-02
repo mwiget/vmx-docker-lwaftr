@@ -10,7 +10,7 @@ import (
 	context "context"
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
-	jnx_addr "github.com/juniper/vmx-docker-lwaftr/jroutes/stubs/jnx_addr"
+	jnx_addr "github.com/Juniper/vmx-docker-lwaftr/jroutes/stubs/jnx_addr"
 	grpc "google.golang.org/grpc"
 	math "math"
 )
