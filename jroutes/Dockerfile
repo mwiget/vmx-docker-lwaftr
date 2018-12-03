@@ -20,9 +20,9 @@ RUN apk add --no-cache build-base git go-bootstrap go protobuf \
   && go get github.com/eclipse/paho.mqtt.golang \
   && mkdir -p /root/go/src/github.com/vmx-docker-lwaftr/jroutes
 
-COPY . /root/go/src/github.com/juniper/vmx-docker-lwaftr/jroutes
+COPY . /root/go/src/github.com/Juniper/vmx-docker-lwaftr/jroutes
 
-RUN cd /root/go/src/github.com/juniper/vmx-docker-lwaftr/jroutes \
+RUN cd /root/go/src/github.com/Juniper/vmx-docker-lwaftr/jroutes \
   && export PATH=${PATH}:/root/go/bin \
   && mkdir -p stubs \
   && mkdir -p stubs/authentication \
@@ -35,7 +35,7 @@ RUN cd /root/go/src/github.com/juniper/vmx-docker-lwaftr/jroutes \
   && protoc -I proto --go_out=plugins=grpc:stubs/jnx_addr proto/jnx_addr.proto \
   && protoc -I proto --go_out=plugins=grpc:stubs/prpd_common proto/prpd_common.proto
 
-RUN cd / && go build github.com/juniper/vmx-docker-lwaftr/jroutes && strip jroutes
+RUN cd / && go build github.com/Juniper/vmx-docker-lwaftr/jroutes && strip jroutes
 
 # Build main image
 
