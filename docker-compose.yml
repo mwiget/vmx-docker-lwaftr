@@ -18,7 +18,7 @@ services:
     environment:
       - ID=vmx1
       - LICENSE=license-eval.txt
-      - IMAGE=junos-vmx-x86-64-18.3R1.9.qcow2
+      - IMAGE=junos-vmx-x86-64-18.4R1.8.qcow2
       - PUBLICKEY=id_rsa.pub
       - CONFIG=vmx1.conf
     volumes:
@@ -69,7 +69,7 @@ services:
     environment:
       - ID=dcgw
       - LICENSE=license-eval.txt
-      - IMAGE=junos-vmx-x86-64-18.3R1.9.qcow2
+      - IMAGE=junos-vmx-x86-64-18.4R1.8.qcow2
       - PUBLICKEY=id_rsa.pub
       - CONFIG=dcgw.conf
     volumes:

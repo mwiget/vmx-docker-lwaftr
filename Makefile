@@ -1,7 +1,7 @@
 # Copyright (c) 2018, Juniper Networks, Inc.
 # All rights reserved.
 #
-all: build
+all: build 
 
 build: snabb/src/snabb
 	cd snabb && make clean && make docker && make -j && cd src && make -j
@@ -19,7 +19,7 @@ license-eval.txt:
 id_rsa.pub:
 	cp ~/.ssh/id_rsa.pub .
 
-up:
+up: id_rsa.pub
 	docker-compose up -d --build
 	./start-snabb-lwaftr.sh &
 
